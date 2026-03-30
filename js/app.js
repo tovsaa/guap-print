@@ -270,12 +270,13 @@ async function handlePaymentReturn() {
   const result = readPaymentResult();
   if (!result) return false;
 
+  // Платёжный редирект обнаружен — дальше всегда шаг 4, goToStep(1) не нужен
   clearPaymentParams();
   goToStep(4);
 
   if (result.status === "failed") {
     showResult("payment-error");
-    return;
+    return true;
   }
 
   // Восстанавливаем state из sessionStorage после редиректа
@@ -291,7 +292,7 @@ async function handlePaymentReturn() {
   const { printParams, pages: totalPages } = state;
   if (!printParams || !totalPages || !state.fileId || !state.paymentId) {
     showResult("payment-error");
-    return;
+    return true;
   }
 
   await submitPrintJob(
