@@ -263,9 +263,12 @@ function showResult(which) {
   el.resultPaymentError.classList.toggle("hidden", which !== "payment-error");
 }
 
+/**
+ * @returns {Promise<boolean>} true если страница открыта после редиректа с оплаты
+ */
 async function handlePaymentReturn() {
   const result = readPaymentResult();
-  if (!result) return;
+  if (!result) return false;
 
   clearPaymentParams();
   goToStep(4);
@@ -306,6 +309,7 @@ async function handlePaymentReturn() {
     },
     () => showResult("payment-error"),
   );
+  return true;
 }
 
 el.btnRetryPayment.addEventListener("click", () => goToStep(3));
@@ -328,5 +332,7 @@ el.btnNewOrder.addEventListener("click", () => {
 // Инициализация
 // ============================================================
 
-handlePaymentReturn();
-goToStep(1);
+(async () => {
+  const wasPaymentReturn = await handlePaymentReturn();
+  if (!wasPaymentReturn) goToStep(1);
+})();
