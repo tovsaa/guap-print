@@ -214,7 +214,10 @@ function fillOrderSummary() {
   const cost = pageCount * printParams.copies * (printParams.color === "color" ? prices.color : prices.bw);
 
   el.summaryFilename.textContent = fileName ?? "—";
-  el.summaryPages.textContent    = printParams.pages === "all" ? `Все (${totalPages})` : printParams.pages;
+  const pagesLabel = printParams.pages === "all"
+    ? `Все (${totalPages} стр.)`
+    : `${printParams.pages} — ${pageCount} стр.`;
+  el.summaryPages.textContent = pagesLabel;
   el.summaryCopies.textContent   = String(printParams.copies);
   el.summaryColor.textContent    = printParams.color === "color" ? "Цветной" : "Чёрно-белый";
   el.summaryTotal.textContent    = formatCost(cost, prices.currency);
@@ -233,6 +236,15 @@ el.btnPay.addEventListener("click", async () => {
   const { pages: pageList } = parsePageRange(printParams.pages, totalPages);
   const pageCount = pageList?.length ?? totalPages;
   const cost = pageCount * printParams.copies * (printParams.color === "color" ? prices.color : prices.bw);
+
+  // Сохраняем state в sessionStorage перед редиректом — после возврата страница перезагрузится
+  sessionStorage.setItem("printState", JSON.stringify({
+    fileId:     state.fileId,
+    pages:      state.pages,
+    fileName:   state.fileName,
+    prices:     state.prices,
+    printParams: state.printParams,
+  }));
 
   await initiatePayment(cost, prices.currency, `Печать: ${pageCount} стр. × ${printParams.copies} коп.`);
 });
@@ -261,6 +273,13 @@ async function handlePaymentReturn() {
   if (result.status === "failed") {
     showResult("payment-error");
     return;
+  }
+
+  // Восстанавливаем state из sessionStorage после редиректа
+  const saved = sessionStorage.getItem("printState");
+  if (saved) {
+    Object.assign(state, JSON.parse(saved));
+    sessionStorage.removeItem("printState");
   }
 
   state.paymentId = result.paymentId;
