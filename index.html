@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Печать документов — Библиотека</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="app" id="app">
+    <header class="app__header">
+      <h1 class="app__title">Заказ печати</h1>
+    </header>
+
+    <!-- Stepper -->
+    <nav class="stepper" aria-label="Шаги оформления заказа">
+      <ol class="stepper__list">
+        <li class="stepper__item stepper__item--active" id="step-indicator-1" aria-current="step">
+          <span class="stepper__number" aria-hidden="true">1</span>
+          <span class="stepper__label">Файл</span>
+        </li>
+        <li class="stepper__item" id="step-indicator-2">
+          <span class="stepper__number" aria-hidden="true">2</span>
+          <span class="stepper__label">Параметры</span>
+        </li>
+        <li class="stepper__item" id="step-indicator-3">
+          <span class="stepper__number" aria-hidden="true">3</span>
+          <span class="stepper__label">Оплата</span>
+        </li>
+        <li class="stepper__item" id="step-indicator-4">
+          <span class="stepper__number" aria-hidden="true">4</span>
+          <span class="stepper__label">Готово</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Уведомления об ошибках -->
+    <div
+      class="alert alert--error hidden"
+      id="global-error"
+      role="alert"
+      aria-live="assertive"
+    >
+      <span class="alert__text" id="global-error-text"></span>
+      <button class="alert__close" id="global-error-close" aria-label="Закрыть сообщение об ошибке">&times;</button>
+    </div>
+
+    <!-- Шаг 1: Загрузка файла -->
+    <section
+      class="step"
+      id="step-1"
+      aria-labelledby="step-1-title"
+    >
+      <h2 class="step__title" id="step-1-title">Загрузка файла</h2>
+      <p class="step__description">Поддерживаются файлы .doc и .docx, размером до 50 МБ.</p>
+
+      <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="Выберите файл для загрузки">
+        <input
+          class="upload-zone__input"
+          type="file"
+          id="file-input"
+          accept=".doc,.docx"
+          aria-label="Выбрать файл"
+        />
+        <div class="upload-zone__content" aria-hidden="true">
+          <span class="upload-zone__icon">📄</span>
+          <p class="upload-zone__text">Перетащите файл сюда или <span class="upload-zone__link">выберите на компьютере</span></p>
+          <p class="upload-zone__hint">.doc, .docx — до 50 МБ</p>
+        </div>
+      </div>
+
+      <!-- Прогресс загрузки -->
+      <div class="upload-progress hidden" id="upload-progress" aria-live="polite">
+        <div class="upload-progress__bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Прогресс загрузки">
+          <div class="upload-progress__bar" id="upload-progress-bar"></div>
+        </div>
+        <span class="upload-progress__text" id="upload-progress-text">Загрузка...</span>
+      </div>
+
+      <!-- Информация о загруженном файле -->
+      <div class="file-info hidden" id="file-info" aria-live="polite">
+        <span class="file-info__name" id="file-info-name"></span>
+        <span class="file-info__pages" id="file-info-pages"></span>
+      </div>
+
+      <div class="step__actions">
+        <button class="btn btn--primary" id="btn-next-1" disabled aria-disabled="true">
+          Далее
+        </button>
+      </div>
+    </section>
+
+    <!-- Шаг 2: Параметры печати -->
+    <section
+      class="step hidden"
+      id="step-2"
+      aria-labelledby="step-2-title"
+    >
+      <h2 class="step__title" id="step-2-title">Параметры печати</h2>
+
+      <form class="print-form" id="print-form" novalidate>
+        <div class="form-group">
+          <label class="form-group__label" for="input-pages">
+            Диапазон страниц
+          </label>
+          <input
+            class="form-group__input"
+            type="text"
+            id="input-pages"
+            name="pages"
+            placeholder="Например: 1-5, 8, 11-13 или оставьте пустым для всех"
+            aria-describedby="pages-hint pages-error"
+          />
+          <span class="form-group__hint" id="pages-hint">
+            Всего страниц: <strong id="total-pages-display">—</strong>
+          </span>
+          <span class="form-group__error hidden" id="pages-error" role="alert"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-group__label" for="input-copies">
+            Количество копий
+          </label>
+          <input
+            class="form-group__input form-group__input--short"
+            type="number"
+            id="input-copies"
+            name="copies"
+            min="1"
+            max="10"
+            value="1"
+            aria-describedby="copies-error"
+          />
+          <span class="form-group__error hidden" id="copies-error" role="alert"></span>
+        </div>
+
+        <fieldset class="form-group">
+          <legend class="form-group__label">Режим печати</legend>
+          <div class="radio-group">
+            <label class="radio-group__item">
+              <input
+                class="radio-group__input"
+                type="radio"
+                name="color"
+                value="bw"
+                checked
+              />
+              <span class="radio-group__label">Чёрно-белый</span>
+            </label>
+            <label class="radio-group__item">
+              <input
+                class="radio-group__input"
+                type="radio"
+                name="color"
+                value="color"
+              />
+              <span class="radio-group__label">Цветной</span>
+            </label>
+          </div>
+        </fieldset>
+      </form>
+
+      <!-- Итоговая стоимость -->
+      <div class="cost-summary" id="cost-summary" aria-live="polite">
+        <span class="cost-summary__label">Итого:</span>
+        <span class="cost-summary__value" id="cost-value">—</span>
+        <span class="cost-summary__currency" id="cost-currency"></span>
+      </div>
+
+      <div class="step__actions">
+        <button class="btn btn--secondary" id="btn-back-2">Назад</button>
+        <button class="btn btn--primary" id="btn-next-2">Перейти к оплате</button>
+      </div>
+    </section>
+
+    <!-- Шаг 3: Оплата -->
+    <section
+      class="step hidden"
+      id="step-3"
+      aria-labelledby="step-3-title"
+    >
+      <h2 class="step__title" id="step-3-title">Оплата</h2>
+
+      <!-- Сводка заказа перед оплатой -->
+      <div class="order-summary" id="order-summary" aria-label="Сводка заказа">
+        <dl class="order-summary__list">
+          <div class="order-summary__row">
+            <dt>Файл</dt>
+            <dd id="summary-filename"></dd>
+          </div>
+          <div class="order-summary__row">
+            <dt>Страницы</dt>
+            <dd id="summary-pages"></dd>
+          </div>
+          <div class="order-summary__row">
+            <dt>Копии</dt>
+            <dd id="summary-copies"></dd>
+          </div>
+          <div class="order-summary__row">
+            <dt>Режим</dt>
+            <dd id="summary-color"></dd>
+          </div>
+          <div class="order-summary__row order-summary__row--total">
+            <dt>Сумма</dt>
+            <dd id="summary-total"></dd>
+          </div>
+        </dl>
+      </div>
+
+      <p class="payment__note">
+        После нажатия кнопки вы будете перенаправлены на страницу оплаты.
+        Печать начнётся автоматически после подтверждения платежа.
+      </p>
+
+      <div class="step__actions">
+        <button class="btn btn--secondary" id="btn-back-3">Назад</button>
+        <button class="btn btn--primary btn--pay" id="btn-pay">Оплатить</button>
+      </div>
+    </section>
+
+    <!-- Шаг 4: Отправка / результат -->
+    <section
+      class="step hidden"
+      id="step-4"
+      aria-labelledby="step-4-title"
+      aria-live="polite"
+    >
+      <h2 class="step__title" id="step-4-title">Заказ принят</h2>
+
+      <!-- Состояние: отправка -->
+      <div class="result result--pending hidden" id="result-pending">
+        <p>Подтверждаем оплату и отправляем задание на печать...</p>
+      </div>
+
+      <!-- Состояние: успех -->
+      <div class="result result--success hidden" id="result-success">
+        <p class="result__message">Задание успешно поставлено в очередь!</p>
+        <p class="result__job">
+          Номер задания: <strong id="result-job-id"></strong>
+        </p>
+        <button class="btn btn--secondary" id="btn-new-order">Новый заказ</button>
+      </div>
+
+      <!-- Состояние: ошибка оплаты -->
+      <div class="result result--error hidden" id="result-payment-error">
+        <p class="result__message">Оплата не прошла. Попробуйте снова.</p>
+        <button class="btn btn--secondary" id="btn-retry-payment">Вернуться к оплате</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
